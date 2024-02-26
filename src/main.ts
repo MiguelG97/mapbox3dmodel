@@ -85,7 +85,7 @@ export class CustomIFCLayer
     //shouldn't they overlap each other with that approach??
     const loader = new GLTFLoader();
     const gltf = await loader.loadAsync(
-      "https://docs.mapbox.com/mapbox-gl-js/assets/34M_17/34M_17.gltf"
+      "./mydata.gltf" //"https://docs.mapbox.com/mapbox-gl-js/assets/34M_17/34M_17.gltf"
     );
 
     this.scene.add(gltf.scene);
@@ -168,7 +168,7 @@ export class CustomIFCLayer
 const lng = -77.029499;
 const lat = -12.120621;
 const coordinates = new mapboxgl.LngLat(lng, lat);
-mapboxgl.accessToken = "youraccesstoken";
+mapboxgl.accessToken = "accesstoken";
 
 const map = new mapboxgl.Map({
   container: "map",
