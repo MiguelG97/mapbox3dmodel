@@ -2,7 +2,7 @@ import mapboxgl, {
   CustomLayerInterface,
 } from "mapbox-gl";
 import * as THREE from "three";
-import { GLTFLoader } from "three/examples/jsm/Addons.js";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 
 interface Mtransform {
   translateX: number;
@@ -61,34 +61,41 @@ export class CustomIFCLayer
     gl: WebGL2RenderingContext
   ) {
     //ADD LIGHTS
-    // const directionalLight =
-    //   new THREE.DirectionalLight(0xffffff);
-    // directionalLight.position
-    //   .set(0, -70, 100)
-    //   .normalize();
-    // this.scene.add(directionalLight);
-    // const directionalLight2 =
-    //   new THREE.DirectionalLight(0xffffff);
-    // directionalLight2.position
-    //   .set(0, 70, 100)
-    //   .normalize();
-    // this.scene.add(directionalLight2);
-    const ambientLight = new THREE.AmbientLight(
-      0xffffff,
-      1
-    );
-    this.scene.add(ambientLight);
+    const directionalLight =
+      new THREE.DirectionalLight(0xffffff);
+    directionalLight.position
+      .set(0, -70, 100)
+      .normalize();
+    this.scene.add(directionalLight);
+    const directionalLight2 =
+      new THREE.DirectionalLight(0xffffff);
+    directionalLight2.position
+      .set(0, 70, 100)
+      .normalize();
+    this.scene.add(directionalLight2);
+    // const ambientLight = new THREE.AmbientLight(
+    //   0xffffff,
+    //   1
+    // );
+    // this.scene.add(ambientLight);
 
     //add or fragments to the scene!
     //shouldn't we add the model to an existing map scene??
     //why it works creating a new webglrenderer that uses the mapbox canvas and webglcontext?
     //shouldn't they overlap each other with that approach??
     const loader = new GLTFLoader();
-    const gltf = await loader.loadAsync(
-      "./mydata.gltf" //"https://docs.mapbox.com/mapbox-gl-js/assets/34M_17/34M_17.gltf"
+    loader.load(
+      "https://docs.mapbox.com/mapbox-gl-js/assets/34M_17/34M_17.gltf",
+      (gltf) => {
+        this.scene.add(gltf.scene);
+      }
     );
-    console.log("my gltf: ", gltf);
-    this.scene.add(gltf.scene);
+    // const gltf = await loader.loadAsync(
+    //   "https://docs.mapbox.com/mapbox-gl-js/assets/34M_17/34M_17.gltf" //"https://docs.mapbox.com/mapbox-gl-js/assets/34M_17/34M_17.gltf"
+    // );
+    // console.log("my gltf: ", gltf);
+    // this.scene.add(gltf.scene);
+    //--------------------
     // const gltf = await loader.parseAsync(
     //   JSON.stringify(
     //     CustomIFCLayer.gltfData,
@@ -134,8 +141,8 @@ export class CustomIFCLayer
     );
     const l = new THREE.Matrix4()
       .makeTranslation(
-        this.modelTransform.translateY,
         this.modelTransform.translateX,
+        this.modelTransform.translateY,
         this.modelTransform.translateZ ?? 0
       )
       .scale(
@@ -161,93 +168,96 @@ export class CustomIFCLayer
       this.map.triggerRepaint();
     }
   }
-  //optional
-  prerender() {}
-  onRemove() {}
 }
-const lng = -77.029499;
-const lat = -12.120621;
-const coordinates = new mapboxgl.LngLat(lng, lat);
-mapboxgl.accessToken = "token";
+// const lng = -77.029499;
+// const lat = -12.120621;
+// const coordinates = new mapboxgl.LngLat(lng, lat);
+// mapboxgl.accessToken =
+//   "pk.eyJ1IjoibWlndWVsZzk3IiwiYSI6ImNsc21pa3lzazBseG0ycWw5b3p0amtidWYifQ.wrDaCxPiwdl55CofX8KXrg";
 
-const map = new mapboxgl.Map({
-  container: "map",
-  style: "mapbox://styles/mapbox/light-v10", //"mapbox://styles/mapbox/streets-v9",
-  projection: { name: "globe" }, // Display the map as a globe, since satellite-v9 defaults to Mercator
-  zoom: 2,
-  center: coordinates, //[lng,lat]
-  antialias: true,
-  pitch: 60,
-});
+// const map = new mapboxgl.Map({
+//   container: "map",
+//   style: "mapbox://styles/mapbox/light-v10", //"mapbox://styles/mapbox/streets-v9",
+//   projection: { name: "globe" }, // Display the map as a globe, since satellite-v9 defaults to Mercator
+//   zoom: 18,
+//   center: coordinates, //[lng,lat]
+//   antialias: true,
+//   pitch: 60,
+// });
 
-const ifcLayer = new CustomIFCLayer(coordinates);
-map.on("style.load", async () => {
-  //i) add custom 3d model layer
-  map.addLayer(ifcLayer, "waterway-label"); //"building"
+// const ifcLayer = new CustomIFCLayer(coordinates);
+// map.on("style.load", async () => {
+//   //i) add custom 3d model layer
+//   map.addLayer(ifcLayer, "waterway-label"); //"building"
 
-  //ii) setup for planet UI
-  map.setFog({
-    color: "rgb(186, 210, 235)", // Lower atmosphere
-    "high-color": "rgb(36, 92, 223)", // Upper atmosphere
-    "horizon-blend": 0.02, // Atmosphere thickness (default 0.2 at low zooms)
-    "space-color": "rgb(11, 11, 25)", // Background color
-    "star-intensity": 0.6, // Background star brightness (default 0.35 at low zoooms )
-  });
-  //iii) add building extrusion layer
-  const layers = map.getStyle().layers;
-  const labelLayerId = layers.find(
-    (layer) =>
-      layer.type === "symbol" &&
-      layer.layout !== undefined &&
-      layer.layout["text-field"]
-  )?.id;
-  map.addLayer(
-    {
-      id: "add-3d-buildings",
-      source: "composite",
-      "source-layer": "building",
-      filter: ["==", "extrude", "true"],
-      type: "fill-extrusion",
-      minzoom: 15,
-      paint: {
-        "fill-extrusion-color": "#aaa",
-        "fill-extrusion-height": [
-          "interpolate",
-          ["linear"],
-          ["zoom"],
-          15,
-          0,
-          15.05,
-          ["get", "height"],
-        ],
-        "fill-extrusion-base": [
-          "interpolate",
-          ["linear"],
-          ["zoom"],
-          15,
-          0,
-          15.05,
-          ["get", "min_height"],
-        ],
-        "fill-extrusion-opacity": 0.6,
-      },
-    },
-    labelLayerId
-  );
-  map.setLayoutProperty(
-    ifcLayer.id,
-    "visibility",
-    "visible"
-  );
-});
-map.on("load", () => {
-  map.flyTo({
-    center: coordinates,
-    zoom: 20.5,
-    pitch: 75,
-    essential: true,
-    duration: 12000,
-  });
+//   //ii) setup for planet UI
+//   map.setFog({
+//     color: "rgb(186, 210, 235)", // Lower atmosphere
+//     "high-color": "rgb(36, 92, 223)", // Upper atmosphere
+//     "horizon-blend": 0.02, // Atmosphere thickness (default 0.2 at low zooms)
+//     "space-color": "rgb(11, 11, 25)", // Background color
+//     "star-intensity": 0.6, // Background star brightness (default 0.35 at low zoooms )
+//   });
+//   //iii) add building extrusion layer
+//   const layers = map.getStyle().layers;
+//   const labelLayerId = layers.find(
+//     (layer) =>
+//       layer.type === "symbol" &&
+//       layer.layout !== undefined &&
+//       layer.layout["text-field"]
+//   )?.id;
+//   map.addLayer(
+//     {
+//       id: "add-3d-buildings",
+//       source: "composite",
+//       "source-layer": "building",
+//       filter: ["==", "extrude", "true"],
+//       type: "fill-extrusion",
+//       minzoom: 15,
+//       paint: {
+//         "fill-extrusion-color": "#aaa",
+//         "fill-extrusion-height": [
+//           "interpolate",
+//           ["linear"],
+//           ["zoom"],
+//           15,
+//           0,
+//           15.05,
+//           ["get", "height"],
+//         ],
+//         "fill-extrusion-base": [
+//           "interpolate",
+//           ["linear"],
+//           ["zoom"],
+//           15,
+//           0,
+//           15.05,
+//           ["get", "min_height"],
+//         ],
+//         "fill-extrusion-opacity": 0.6,
+//       },
+//     },
+//     labelLayerId
+//   );
+//   map.setLayoutProperty(
+//     ifcLayer.id,
+//     "visibility",
+//     "visible"
+//   );
+// });
+// map.on("load", () => {
+//   // map.flyTo({
+//   //   center: coordinates,
+//   //   zoom: 20.5,
+//   //   pitch: 75,
+//   //   essential: true,
+//   //   duration: 12000,
+//   // });
 
-  setTimeout(() => {}, 1000);
-});
+//   setTimeout(() => {}, 1000);
+// });
+
+await import(
+  //@ts-ignore
+  "https://miguelg97.github.io/jsmaptest/dist/assets/index-CajYxsf3.js"
+);

@@ -17,9 +17,9 @@
   },
   "dependencies": {
     "@types/mapbox-gl": "^3.1.0",
-    "@types/three": "^0.161.2",
+    "@types/three": "^0.126.0",
     "mapbox-gl": "^3.1.2",
-    "three": "^0.161.0",
+    "three": "^0.126.0",
     "threebox-plugin": "^2.2.7"
   }
 }
