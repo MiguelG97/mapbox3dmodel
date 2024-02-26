@@ -87,7 +87,7 @@ export class CustomIFCLayer
     const gltf = await loader.loadAsync(
       "./mydata.gltf" //"https://docs.mapbox.com/mapbox-gl-js/assets/34M_17/34M_17.gltf"
     );
-
+    console.log("my gltf: ", gltf);
     this.scene.add(gltf.scene);
     // const gltf = await loader.parseAsync(
     //   JSON.stringify(
@@ -168,7 +168,7 @@ export class CustomIFCLayer
 const lng = -77.029499;
 const lat = -12.120621;
 const coordinates = new mapboxgl.LngLat(lng, lat);
-mapboxgl.accessToken = "accesstoken";
+mapboxgl.accessToken = "token";
 
 const map = new mapboxgl.Map({
   container: "map",
@@ -233,6 +233,11 @@ map.on("style.load", async () => {
       },
     },
     labelLayerId
+  );
+  map.setLayoutProperty(
+    ifcLayer.id,
+    "visibility",
+    "visible"
   );
 });
 map.on("load", () => {
