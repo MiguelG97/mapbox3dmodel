@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+* {
+  margin: 0;
+  padding: 0;
+}
+#map {
+  width: calc(100vw - 8px);
+  height: calc(100vh - 8px);
+  /* width: 100vw;
+  height: 100vh; */
+}
